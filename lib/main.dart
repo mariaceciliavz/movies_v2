@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:movies_2/movies_list.dart';
+import 'package:movies_2/movies_list_error.dart';
 
 void main() {
   runApp(const MainApp());
@@ -18,6 +19,7 @@ class MainApp extends StatefulWidget {
 
 class _MainAppState extends State<MainApp> {
   MoviesList? movies;
+  MoviesListError? moviesListError;
 
   Future<void> _getListagemAPI() async {
     await Future.delayed(const Duration(seconds: 5));
@@ -31,9 +33,12 @@ class _MainAppState extends State<MainApp> {
       if (value.statusCode == 200) {
         movies = MoviesList.fromJson(jsonDecode(value.body));
         print(movies.toString());
+      } else if (value.statusCode == 401) {
+        moviesListError = MoviesListError.fromJson(jsonDecode(value.body));
+      } else {
+        print('Erro desconhecido');
       }
-      setState(() {});
-    });
+    }).whenComplete(() => setState(() {}));
   }
 
   @override
@@ -47,10 +52,12 @@ class _MainAppState extends State<MainApp> {
       home: Scaffold(
         backgroundColor: Colors.deepPurple,
         body: Center(
-          child: Text(
-            'Movie: ${movies?.name ?? "Erro"}',
-            style: TextStyle(color: Colors.white),
-          ),
+          child: moviesListError != null
+              ? Text(moviesListError!.toString())
+              : Text(
+                  'Movie: ${movies?.name ?? "Erro"}',
+                  style: TextStyle(color: Colors.white),
+                ),
         ),
       ),
     );
